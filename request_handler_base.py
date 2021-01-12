@@ -27,7 +27,7 @@ class RequestHandlerBase:
 class SalesforceRequestHandler(RequestHandlerBase):
 
     def __init__(self, request, request_uuid):
-        super.__init__('Salesforce', request, request_uuid)
+        super().__init__('Salesforce', request, request_uuid)
         self.function_association = {'populate_yti_details': self.populate_yti_details()}
         self.connect()
 
