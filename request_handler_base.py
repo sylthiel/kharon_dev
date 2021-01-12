@@ -1,11 +1,19 @@
 import configparser
 from simple_salesforce import Salesforce, SalesforceResourceNotFound
+import json
 
 
 class RequestHandlerBase:
     def __init__(self, resource_name, request_body, request_uuid):
         self.resource_name = resource_name
-        self.request = request_body
+        self.is_json = None
+        try:
+            self.request = json.loads(request_body)
+            self.is_json = True
+        except TypeError:
+            self.request = None
+            self.is_json = False
+
         self.requestId = request_uuid
         self.connection_object = None
         config = configparser.ConfigParser()
