@@ -8,7 +8,7 @@ class RequestHandlerBase:
         self.resource_name = resource_name
         self.is_json = None
         try:
-            self.request = json.loads(request_body)
+            self.request = request_body
             self.is_json = True
         except TypeError:
             self.request = None
