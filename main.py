@@ -2,6 +2,7 @@ import sqlite3
 import configparser
 from request_handler_base import SalesforceRequestHandler
 import datetime
+import time
 
 handler_association = {'Salesforce': SalesforceRequestHandler}
 db_cfg = {}
@@ -17,6 +18,7 @@ def load_config():
 def process(kh_request):
     request_uuid, request_body, failed_to_execute = kh_request[0], kh_request[1], kh_request[2]
     rqh = handler_association[request_body['To']](request_body, request_uuid)
+    print(f'Starting processing for request {request_uuid}')
     result = rqh.function_association[request_body['Function']]()
 
     con = sqlite3.connect(db_cfg['database_path'])
@@ -25,7 +27,7 @@ def process(kh_request):
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE request_uuid = ?',
                     request_uuid)
     else:
-        cur.execute('UPDATE kharon_requests SET failedToExecute ? WHERE request_uuid = ?',
+        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE request_uuid = ?',
                     (failed_to_execute+1, request_uuid))
     con.commit()
     con.close()
@@ -49,6 +51,7 @@ def processing_loop():
                 if len(current_requests):
                     for it_request in current_requests:
                         process(it_request)
+                time.sleep(15)
             else:
                 with open('debug.txt', 'w+') as debug:
                     debug.write(f'{datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()}'
