@@ -22,11 +22,11 @@ def process(kh_request):
     con = sqlite3.connect(db_cfg['database_path'])
     cur = con.cursor()
     if result:
-        cur.execute('UPDATE ? SET Completed = 1 WHERE request_uuid = ?',
-                    db_cfg['table_name'], request_uuid)
+        cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE request_uuid = ?',
+                    request_uuid)
     else:
-        cur.execute('UPDATE ? SET failedToExecute WHERE request_uuid = ?',
-                    db_cfg['table_name'], failed_to_execute+1)
+        cur.execute('UPDATE kharon_requests SET failedToExecute ? WHERE request_uuid = ?',
+                    (failed_to_execute+1, request_uuid))
     con.commit()
     con.close()
     return True
@@ -37,12 +37,15 @@ def processing_loop():
     while True:
         try:
             con = sqlite3.connect(db_cfg['database_path'])
+
             if con:
+                print('Established db connection')
                 cur = con.cursor()
-                cur.execute('SELECT requestUUID, requestBody, failedToExecute FROM ? '
-                            'WHERE Completed = 0 AND failedToExecute < 3 LIMIT 10 ORDER BY createdDatetime',
-                            db_cfg['table_name'])
+                query = 'SELECT requestUUID, requestBody, failedToExecute FROM kharon_requests ' \
+                        'WHERE Completed = 0 AND failedToExecute < 3 LIMIT 10 ORDER BY createdDatetime'
+                cur.execute(query)
                 current_requests = cur.fetchall()
+                print(f'Using query: {query}\nFound {current_requests}')
                 if len(current_requests):
                     for it_request in current_requests:
                         process(it_request)
