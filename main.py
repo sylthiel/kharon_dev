@@ -2,6 +2,7 @@ import sqlite3
 import configparser
 from request_handler_base import SalesforceRequestHandler
 import datetime
+import json
 import time
 
 handler_association = {'Salesforce': SalesforceRequestHandler}

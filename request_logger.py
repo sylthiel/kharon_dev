@@ -30,7 +30,7 @@ def store_in_database(requestUUID, requestToLog):
     req = {
         'requestUUID': requestUUID,
         'requestBody': json.dumps(requestJSON),
-        'headers': json.dumps(requestHeaders),
+        'headers': str(requestHeaders),
         'requestedFunction': requestJSON['Function'],
         'requestFrom': requestJSON['From'],
         'requestTo': requestJSON['To'],
