@@ -42,7 +42,7 @@ def processing_loop():
                 print('Established db connection')
                 cur = con.cursor()
                 query = 'SELECT requestUUID, requestBody, failedToExecute FROM kharon_requests ' \
-                        'WHERE Completed = 0 AND failedToExecute < 3 LIMIT 10 ORDER BY createdDatetime'
+                        'WHERE Completed = 0 AND failedToExecute < 3 ORDER BY createdDatetime LIMIT 10'
                 cur.execute(query)
                 current_requests = cur.fetchall()
                 print(f'Using query: {query}\nFound {current_requests}')
