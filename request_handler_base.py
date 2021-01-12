@@ -23,11 +23,11 @@ class RequestHandlerBase:
             for x in config[resource_name]:
                 self.config[x] = config[resource_name][x]
         except KeyError as e:
-            with open('debug.log', 'w+') as debug:
+            with open('debug.log', 'a+') as debug:
                 debug.write(f'{request_uuid}|'
                             f'  Failed to extract configuration for resource {resource_name} -- invalid resource name')
             raise
-        with open('debug.log', 'w+') as debug:
+        with open('debug.log', 'a+') as debug:
             debug.write(f'{request_uuid}|'
                         f'SUCCESS: loaded request handler configuration for {resource_name}')
 

@@ -70,11 +70,11 @@ def processing_loop():
                         process(it_request)
                 time.sleep(15)
             else:
-                with open('debug.txt', 'w+') as debug:
+                with open('debug.txt', 'a+') as debug:
                     debug.write(f'{datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()}'
                                 f'|CRITICAL|Failed to establish a database connection\n')
 
         except Exception as e:
-            with open('debug.txt', 'w+') as debug:
+            with open('debug.txt', 'a+') as debug:
                 debug.write('Failed to process request\n' + str(e) + '\n')
             continue
