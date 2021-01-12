@@ -42,7 +42,7 @@ def process(kh_request):
     cur = con.cursor()
     if result:
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
-                    request_uuid)
+                    [request_uuid])
     else:
         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE request_uuid = ?',
                     (failed_to_execute+1, request_uuid))
