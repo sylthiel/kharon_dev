@@ -29,8 +29,8 @@ def store_in_database(requestUUID, requestToLog):
     moment = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
     req = {
         'requestUUID': requestUUID,
-        'requestBody': str(requestJSON),
-        'headers': str(requestHeaders),
+        'requestBody': json.dumps(requestJSON),
+        'headers': json.dumps(requestHeaders),
         'requestedFunction': requestJSON['Function'],
         'requestFrom': requestJSON['From'],
         'requestTo': requestJSON['To'],
