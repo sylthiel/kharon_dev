@@ -9,6 +9,22 @@ handler_association = {'Salesforce': SalesforceRequestHandler}
 db_cfg = {}
 
 
+db_schema = '''
+CREATE TABLE IF NOT EXISTS "kharon_requests"
+(
+    [Id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [requestUUID] VARCHAR(40)  NOT NULL,
+    [failedToExecute] INTEGER DEFAULT 0,
+    [requestedFunction] VARCHAR(40) NOT NULL,
+    [requestBody] NVARCHAR(6000),
+    [requestFrom] VARCHAR(40),
+    [requestTo] VARCHAR(40),
+    [referenceObjectId] VARCHAR(40),
+    [createdDatetime] TEXT,
+    [headers] TEXT,
+    [Completed] INTEGER DEFAULT 0);
+'''
+
 def load_config():
     global db_cfg
     config = configparser.ConfigParser()
@@ -25,7 +41,7 @@ def process(kh_request):
     con = sqlite3.connect(db_cfg['database_path'])
     cur = con.cursor()
     if result:
-        cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE request_uuid = ?',
+        cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
                     request_uuid)
     else:
         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE request_uuid = ?',
