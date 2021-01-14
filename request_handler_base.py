@@ -74,7 +74,10 @@ class YoutrackRequestHandler(RequestHandlerBase):
         }
         self.required_details = {it.strip() for it in self.config['required details'].split(',')}
         self.api_endpoint = self.config['api endpoint']
-        self.function_association = {'obtain_yti_details': self.obtain_yti_details}
+        self.function_association = {
+            'obtain_yti_details': self.obtain_yti_details,
+            'mention_case_in_yti': self.mention_case_in_yti
+        }
 
     def obtain_yti_details(self):
         issue_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId']
