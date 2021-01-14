@@ -74,7 +74,7 @@ def processing_loop():
                             debug.write(f'{it_request[0]}|ERROR|Exception while processing request\n{str(e)}\n')
                         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUID = ?',
                                     (int(it_request[2]) + 1, it_request[0]))
-                        cur.commit()
+                        con.commit()
             else:
                 time.sleep(15)
         else:
