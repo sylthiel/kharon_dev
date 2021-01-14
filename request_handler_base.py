@@ -1,4 +1,5 @@
 import configparser
+import requests
 from simple_salesforce import Salesforce, SalesforceResourceNotFound
 import json
 
@@ -7,12 +8,8 @@ class RequestHandlerBase:
     def __init__(self, resource_name, request_body, request_uuid):
         self.resource_name = resource_name
         self.is_json = None
-        try:
-            self.request = request_body
-            self.is_json = True
-        except TypeError:
-            self.request = None
-            self.is_json = False
+        self.request = request_body
+
 
         self.requestId = request_uuid
         self.connection_object = None
@@ -64,4 +61,66 @@ class SalesforceRequestHandler(RequestHandlerBase):
             return self.connection_object.YoutrackIssue__c.update(existing_case['Id'], prepared_yti_details)
         except SalesforceResourceNotFound:
             return self.connection_object.YoutrackIssue__c.create(prepared_yti_details)
+
+
+class YoutrackRequestHandler(RequestHandlerBase):
+    def __init__(self, request_body, request_uuid):
+        super().__init__('YouTrack', request_body, request_uuid)
+        self.headers = {
+            'Accept': 'application/json',
+            'Authorization': self.config['authorization'],
+            'Cache-control': 'no-cache',
+            'Content-type': 'application/json'
+        }
+        self.required_details = {it.strip() for it in self.config['required details'].split(',')}
+        self.api_endpoint = self.config['api endpoint']
+        self.function_association = {'obtain_yti_details'}
+
+    def obtain_yti_details(self):
+        issue_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId']
+        issue_with_fields = issue_api_location + '?fields=id,summary,' \
+                                                 'customFields(id,' \
+                                                 'projectCustomField(id,field(id,name)),value(name))'
+        request_yti_details = requests.get(issue_with_fields, headers=self.headers)
+        if request_yti_details.status_code != 200:
+            if request_yti_details.status_code == 404:
+                yti_details = {
+                    'YTReadableId': self.request['YTReadableId'],
+                    'State': 'Non-existent'
+                }
+                return yti_details
+            else:
+                with open('debug.txt', 'a+') as log:
+                    log.write(f'{self.requestId}|ERROR|'
+                              f'Failed to obtain details for issue {self.request["YTReadableId"]}\n'
+                              f'API URL used: {issue_with_fields}\n'
+                              f'Status code: {request_yti_details.status_code}'
+                              f'Server response: {request_yti_details.text}')
+                return None
+
+        else:
+            yti_details = {
+                'YTReadableId': self.request['YTReadableId']
+            }
+            json_response = request_yti_details.json()
+            if 'summary' in json_response:
+                yti_details['summary'] = json_response['summary']
+
+            custom_fields = json_response['customFields']
+            for cf in custom_fields:
+                try:
+                    name = cf['projectCustomField']['field']['name']
+                    if name in self.required_details and cf['value']:
+                        value = cf['value']['name']
+                        yti_details[name] = value
+                except IndexError:
+                    with open('debug.txt', 'a+') as log:
+                        log.write(f'Unexpected json structure:\n'
+                                  f'{str(cf)}')
+            yti_main = {
+                "From": "YouTrack",
+                "To": self.request.get('From'),
+                "Function": "populate_yti_details",
+                "YoutrackIssue": yti_details}
+            return yti_main
 
