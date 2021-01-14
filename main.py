@@ -35,11 +35,12 @@ def validate_request(request_uuid, request_body):
     try:
         json_req = json.loads(request_body)
     except Exception as e:
-        dbg(f'{request_uuid}|ERROR|Error when parsing request JSON\n{str(e)}\nRequest body:\n'
+        dbg(f'{request_uuid}|INFO|Error when parsing request JSON\n{str(e)}\nRequest body:\n'
             f'{request_body}\n')
         return False
     sender, rcpt, fn = json_req.get('From'), json_req.get('To'), json_req.get('Function')
     return sender and rcpt and fn
+
 
 def load_config():
     global db_cfg
@@ -49,29 +50,30 @@ def load_config():
 
 
 def process(kh_request):
+    con = sqlite3.connect(db_cfg['database_path'])
+    cur = con.cursor()
     if not validate_request(kh_request[0], kh_request[1]):
-        con = sqlite3.connect(db_cfg['database_path'])
-        cur = con.cursor()
         cur.execute('UPDATE kharon_requests SET failedToExecute = 3 WHERE requestUUID = ?',
                     [kh_request[0]])
+        dbg(f'{kh_request[0]}|ERROR|Request was invalid, discarding')
         con.commit()
         con.close()
         return False
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
-
     rqh = handler_association[request_body['To']](request_body, request_uuid)
-    print(f'Starting processing for request {request_uuid}')
+    dbg(f'{request_uuid}|INFO|Starting processing for request \n')
     result = rqh.function_association[request_body['Function']]()
 
-    # This indicates a request that has more than one stage (get from one service send back)
+    # This condition indicates a request that has more than one stage (needs to be processed further)
     if validate_request(request_uuid, result):
         return process([request_uuid, result, failed_to_execute])
-    con = sqlite3.connect(db_cfg['database_path'])
-    cur = con.cursor()
+
     if result:
+        dbg(f'{request_uuid}|INFO|SUccessfully completed\n')
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
                     [request_uuid])
     else:
+        dbg(f'{request_uuid}|ERROR|Failed to complete, currently at {failed_to_execute+1} retries')
         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUIDit = ?',
                     (failed_to_execute+1, request_uuid))
     con.commit()

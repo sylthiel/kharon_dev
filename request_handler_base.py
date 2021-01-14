@@ -9,8 +9,6 @@ class RequestHandlerBase:
         self.resource_name = resource_name
         self.is_json = None
         self.request = request_body
-
-
         self.requestId = request_uuid
         self.connection_object = None
         config = configparser.ConfigParser()
