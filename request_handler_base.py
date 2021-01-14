@@ -122,5 +122,5 @@ class YoutrackRequestHandler(RequestHandlerBase):
                 "To": self.request.get('From'),
                 "Function": "populate_yti_details",
                 "YoutrackIssue": yti_details}
-            return yti_main
+            return json.dumps(yti_main)
 

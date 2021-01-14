@@ -35,7 +35,7 @@ def load_config():
 
 def process(kh_request):
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
-
+    print(f'Received\n {kh_request}\n')
     rqh = handler_association[request_body['To']](request_body, request_uuid)
     print(f'Starting processing for request {request_uuid}')
     result = rqh.function_association[request_body['Function']]()
