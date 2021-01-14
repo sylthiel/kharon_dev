@@ -26,6 +26,17 @@ CREATE TABLE IF NOT EXISTS "kharon_requests"
 '''
 
 
+def validate_request(request_uuid, request_body):
+    try:
+        json_req = json.loads(request_body)
+    except Exception as e:
+        with open('debug.txt', 'a+') as debug:
+            debug.write(f'{request_uuid}|ERROR|Error when parsing request JSON\n{str(e)}\nRequest body:\n'
+                        f'{request_body}\n')
+        return False
+    sender, rcpt, fn = json_req.get('From'), json_req.get('To'), json_req.get('Function')
+    return sender and rcpt and fn
+
 def load_config():
     global db_cfg
     config = configparser.ConfigParser()
@@ -34,12 +45,22 @@ def load_config():
 
 
 def process(kh_request):
+    if not validate_request(kh_request[1]):
+        con = sqlite3.connect(db_cfg['database_path'])
+        cur = con.cursor()
+        cur.execute('UPDATE kharon_requests SET failedToExecute = 3 WHERE requestUUID = ?',
+                    [kh_request[0]])
+        con.commit()
+        con.close()
+        return False
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
     print(f'Received\n {kh_request}\n')
     rqh = handler_association[request_body['To']](request_body, request_uuid)
     print(f'Starting processing for request {request_uuid}')
     result = rqh.function_association[request_body['Function']]()
-    if hasattr(result, 'To'):
+
+    # This indicated a request that has more than one stage (get from one service send back)
+    if validate_request(result):
         return process([request_uuid, result, failed_to_execute])
     con = sqlite3.connect(db_cfg['database_path'])
     cur = con.cursor()
