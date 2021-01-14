@@ -47,7 +47,7 @@ def process(kh_request):
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
                     [request_uuid])
     else:
-        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE request_uuid = ?',
+        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUIDit = ?',
                     (failed_to_execute+1, request_uuid))
     con.commit()
     con.close()
@@ -72,7 +72,7 @@ def processing_loop():
                     except Exception as e:
                         with open('debug.txt', 'a+') as debug:
                             debug.write(f'{it_request[0]}|ERROR|Exception while processing request\n{str(e)}\n')
-                        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE request_uuid = ?',
+                        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUID = ?',
                                     (int(it_request[2]) + 1, it_request[0]))
                         cur.commit()
             else:
