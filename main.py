@@ -45,7 +45,7 @@ def load_config():
 
 
 def process(kh_request):
-    if not validate_request(kh_request[1]):
+    if not validate_request(kh_request[0], kh_request[1]):
         con = sqlite3.connect(db_cfg['database_path'])
         cur = con.cursor()
         cur.execute('UPDATE kharon_requests SET failedToExecute = 3 WHERE requestUUID = ?',
@@ -59,8 +59,9 @@ def process(kh_request):
     print(f'Starting processing for request {request_uuid}')
     result = rqh.function_association[request_body['Function']]()
 
-    # This indicated a request that has more than one stage (get from one service send back)
-    if validate_request(result):
+
+    # This indicates a request that has more than one stage (get from one service send back)
+    if validate_request(request_uuid, result):
         return process([request_uuid, result, failed_to_execute])
     con = sqlite3.connect(db_cfg['database_path'])
     cur = con.cursor()
