@@ -109,3 +109,6 @@ def processing_loop():
             load_config()
             dbg(f'{datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()}'
                 f'|INFO|Config reloaded due to connection error\nCurrent config:\n{db_cfg}')
+
+if __name__ == "__main__":
+    processing_loop()
