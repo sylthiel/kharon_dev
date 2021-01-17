@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS "kharon_requests"
 def store_in_database(requestUUID, requestToLog):
     requestJSON = requestToLog.get_json()
     requestHeaders = requestToLog.headers
+    trigger_object = requestJSON.get('TriggerObject')
     conn = sqlite3.connect('/etc/kharon_db/kharon.db')
     cur = conn.cursor()
     moment = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
@@ -34,7 +35,8 @@ def store_in_database(requestUUID, requestToLog):
         'requestedFunction': requestJSON['Function'],
         'requestFrom': requestJSON['From'],
         'requestTo': requestJSON['To'],
-        'createdDatetime': str(moment)
+        'createdDatetime': str(moment),
+        'TriggerObject': trigger_object
     }
     columns = ', '.join(req.keys())
     placeholders = ':' + ', :'.join(req.keys())
