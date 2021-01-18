@@ -143,4 +143,4 @@ class YoutrackRequestHandler(RequestHandlerBase):
         json_comment = json.dumps(comment_text)
         post_comment_request = requests.post(issue_comments_api_location, data=json_comment, headers=self.headers)
 
-        return str(post_comment_request.status_code)
+        return post_comment_request.status_code
