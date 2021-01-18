@@ -69,7 +69,7 @@ def process(kh_request):
         return process([request_uuid, result, failed_to_execute])
 
     if result:
-        dbg(f'{request_uuid}|INFO|SUccessfully completed\n')
+        dbg(f'{request_uuid}|INFO|Successfully completed\n')
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
                     [request_uuid])
     else:
@@ -97,7 +97,8 @@ def processing_loop():
                     try:
                         process(it_request)
                     except Exception as e:
-                        dbg(f'{it_request[0]}|ERROR|Exception while processing request\n{str(e)}\n')
+                        dbg(f'{it_request[0]}|ERROR|'
+                            f'Exception while processing request\n{getattr(e,"message", repr(e))}\n')
                         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUID = ?',
                                     (int(it_request[2]) + 1, it_request[0]))
                         con.commit()
