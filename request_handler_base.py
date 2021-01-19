@@ -120,7 +120,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
                     name = cf['projectCustomField']['field']['name']
                     if name in self.required_details and cf['value']:
                         value = cf['value']['name']
-                        yti_details[name] = value
+                        yti_details[name.replace(' ', '_')] = value
                 except IndexError:
                     with open('debug.txt', 'a+') as log:
                         log.write(f'Unexpected json structure:\n'
