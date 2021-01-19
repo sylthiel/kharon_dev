@@ -90,7 +90,13 @@ class YoutrackRequestHandler(RequestHandlerBase):
                     'YTReadableId': self.request['YTReadableId'],
                     'State': 'Non-existent'
                 }
-                return yti_details
+                yti_main = {
+                    'From': 'YouTrack',
+                    'To': self.request.get('From'),
+                    'Function': 'populate_yti_details',
+                    'YoutrackIssue': yti_details
+                }
+                return json.dumps(yti_main)
             else:
                 with open('debug.txt', 'a+') as log:
                     log.write(f'{self.requestId}|ERROR|'
