@@ -127,7 +127,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
                                   f'{str(cf)}')
             for tag in json_response['tags']:
                 if tag['name'] in self.required_details:
-                    yti_details[tag['name'].replace(' ','_')] = True;
+                    yti_details[tag['name'].replace(' ', '_')] = True
             yti_main = {
                 "From": "YouTrack",
                 "To": self.request.get('From'),
