@@ -82,7 +82,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
         issue_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId']
         issue_with_fields = issue_api_location + '?fields=id,summary,' \
                                                  'customFields(id,' \
-                                                 'projectCustomField(id,field(id,name)),value(name))'
+                                                 'projectCustomField(id,field(id,name)),value(name)),tags(id,name)'
         request_yti_details = requests.get(issue_with_fields, headers=self.headers)
         if request_yti_details.status_code != 200:
             if request_yti_details.status_code == 404:
@@ -125,6 +125,9 @@ class YoutrackRequestHandler(RequestHandlerBase):
                     with open('debug.txt', 'a+') as log:
                         log.write(f'Unexpected json structure:\n'
                                   f'{str(cf)}')
+            for tag in json_response['tags']:
+                if tag['name'] in self.required_details:
+                    yti_details[tag['name'].replace(' ','_')] = True;
             yti_main = {
                 "From": "YouTrack",
                 "To": self.request.get('From'),
