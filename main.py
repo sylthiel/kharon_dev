@@ -103,7 +103,7 @@ def processing_loop():
                                     (int(it_request[2]) + 1, it_request[0]))
                         con.commit()
             else:
-                time.sleep(15)
+                time.sleep(1)
         else:
             dbg(f'{datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()}'
                 f'|CRITICAL|Failed to establish a database connection\n')
