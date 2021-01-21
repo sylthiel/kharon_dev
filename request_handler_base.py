@@ -51,7 +51,6 @@ class SalesforceRequestHandler(RequestHandlerBase):
            Format:
            {"YoutrackIssue":{"property_name":"property_value"}}"""
         yti_details = self.request.get('YoutrackIssue')
-        print(self.request.get('YoutrackIssue'))
         prepared_yti_details = {k + '__c': v for k, v in yti_details.items()}
         prepared_yti_details['Name'] = yti_details['YTReadableId']
 
@@ -146,8 +145,8 @@ class YoutrackRequestHandler(RequestHandlerBase):
                                  f'({customer_information.get("ContactEmail")})\n'}
         if customer_information.get("Annual$") != '':
             comment_text['text'] += f'Annual: ${customer_information.get("Annual$")}\n'
-        if customer_information.get("Comment") is not None and hasattr(customer_information.get("Comment"), 'isSpace'):
-            if not customer_information.get("Comment").isSpace():
+        if case_information.get("Comment") is not None and hasattr(case_information.get("Comment"), 'isSpace'):
+            if not case_information.get("Comment").isSpace():
                 comment_text['text'] += f'Engineer comment: {case_information.get("CommentFromEngineer")}\n'
         comment_text['text'] += 'This comment was generated automatically by kh'
         json_comment = json.dumps(comment_text)
