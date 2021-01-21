@@ -51,6 +51,7 @@ class SalesforceRequestHandler(RequestHandlerBase):
            Format:
            {"YoutrackIssue":{"property_name":"property_value"}}"""
         yti_details = self.request.get('YoutrackIssue')
+        print(self.request.get('YoutrackIssue'))
         prepared_yti_details = {k + '__c': v for k, v in yti_details.items()}
         prepared_yti_details['Name'] = yti_details['YTReadableId']
 
@@ -84,6 +85,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
                                                  'customFields(id,' \
                                                  'projectCustomField(id,field(id,name)),value(name)),tags(id,name)'
         request_yti_details = requests.get(issue_with_fields, headers=self.headers)
+        print(request_yti_details.json())
         if request_yti_details.status_code != 200:
             if request_yti_details.status_code == 404:
                 yti_details = {
