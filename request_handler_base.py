@@ -66,7 +66,6 @@ class SalesforceRequestHandler(RequestHandlerBase):
             return self.connection_object.YoutrackIssue__c.create(prepared_yti_details)
 
 
-
 class YoutrackRequestHandler(RequestHandlerBase):
     def __init__(self, request_body, request_uuid):
         super().__init__('YouTrack', request_body, request_uuid)
