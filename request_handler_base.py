@@ -145,9 +145,10 @@ class YoutrackRequestHandler(RequestHandlerBase):
                                  f'({customer_information.get("ContactEmail")})\n'}
         if customer_information.get("Annual$") != '':
             comment_text['text'] += f'Annual: ${customer_information.get("Annual$")}\n'
-        if case_information.get("Comment") is not None and hasattr(case_information.get("Comment"), 'isSpace'):
-            if not case_information.get("Comment").isSpace():
-                comment_text['text'] += f'Engineer comment: {case_information.get("CommentFromEngineer")}\n'
+        if case_information.get("CommentFromEngineer") is not None:
+            if hasattr(case_information.get("CommentFromEngineer"), 'isSpace'):
+                if not case_information.get("Comment").isSpace():
+                    comment_text['text'] += f'Engineer comment: {case_information.get("CommentFromEngineer")}\n'
         comment_text['text'] += 'This comment was generated automatically by kh'
         json_comment = json.dumps(comment_text)
         post_comment_request = requests.post(issue_comments_api_location, data=json_comment, headers=self.headers)
