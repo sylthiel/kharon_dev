@@ -139,16 +139,15 @@ class YoutrackRequestHandler(RequestHandlerBase):
         issue_comments_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId'] + '/comments'
         case_information = self.request.get('CaseInformation')
         customer_information = case_information.get('CustomerInformation')
-
-        comment_text = {
-            "text": f'This issue has been referenced in [Salesforce]({case_information.get("URL")})\n'
-                    f'Affected customer: {customer_information.get("CompanyName")}\n'
-                    f'({customer_information.get("ContactEmail")})\n'
-                    f'Annual: ${customer_information.get("Annual$")}\n'
-                    f'Engineer comment: {case_information.get("CommentFromEngineer")}\n'
-                    f'Case Assignee: {case_information.get("Assignee")}\n\n'
-                    f'This comment was generated automatically by kh'
-        }
+        comment_text = {"text" : f'This issue has been referenced in [Salesforce]({case_information.get("URL")})\n'
+                                 f'Affected customer: {customer_information.get("CompanyName")}\n'
+                                 f'({customer_information.get("ContactEmail")})\n'}
+        if customer_information.get("Annual$") != '':
+            comment_text['text'] += f'Annual: ${customer_information.get("Annual$")}\n'
+        if customer_information.get("Comment") is not None and hasattr(customer_information.get("Comment"), 'isSpace'):
+            if not customer_information.get("Comment").isSpace():
+                comment_text['text'] += f'Engineer comment: {case_information.get("CommentFromEngineer")}\n'
+        comment_text['text'] += 'This comment was generated automatically by kh'
         json_comment = json.dumps(comment_text)
         post_comment_request = requests.post(issue_comments_api_location, data=json_comment, headers=self.headers)
 
