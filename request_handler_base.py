@@ -56,11 +56,11 @@ class SalesforceRequestHandler(RequestHandlerBase):
             correct_id = yti_details['YTReadableId']
         else:
             prepared_yti_details = {k + '__c': v for k, v in yti_details.items() if k != 'old_issue_id'}
-            correct_id = 'old_issue_id'
+            correct_id = yti_details['old_issue_id']
         prepared_yti_details['Name'] = yti_details['YTReadableId']
         try:
             existing_case = self.connection_object.YoutrackIssue__c.get_by_custom_id('YTReadableId__c',
-                                                                                     yti_details[correct_id])
+                                                                                     correct_id)
             return self.connection_object.YoutrackIssue__c.update(existing_case['Id'], prepared_yti_details)
         except SalesforceResourceNotFound:
             return self.connection_object.YoutrackIssue__c.create(prepared_yti_details)
