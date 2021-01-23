@@ -36,7 +36,7 @@ class SalesforceRequestHandler(RequestHandlerBase):
 
     def connect(self):
         if self.config != {}:
-            if self.config['sandbox']:
+            if 'sandbox' in self.config:
                 self.connection_object = Salesforce(username=self.config['username'],
                                                     password=self.config['password'],
                                                     security_token=self.config['security_token'],
