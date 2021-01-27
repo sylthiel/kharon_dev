@@ -58,6 +58,8 @@ class SalesforceRequestHandler(RequestHandlerBase):
             prepared_yti_details = {k + '__c': v for k, v in yti_details.items() if k != 'old_issue_id'}
             correct_id = yti_details['old_issue_id']
         prepared_yti_details['Name'] = yti_details['YTReadableId']
+        if 'project__c' not in prepared_yti_details:
+            prepared_yti_details['project__c'] = yti_details['YTReadableId'].split('-')[0]
         try:
             existing_case = self.connection_object.YoutrackIssue__c.get_by_custom_id('YTReadableId__c',
                                                                                      correct_id)
