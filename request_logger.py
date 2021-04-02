@@ -10,15 +10,17 @@ CREATE TABLE IF NOT EXISTS "kharon_requests"
 (
     [Id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     [requestUUID] VARCHAR(40)  NOT NULL,
-    [failedToExecute] INTEGER,
+    [failedToExecute] INTEGER DEFAULT 0,
     [requestedFunction] VARCHAR(40) NOT NULL,
-    [requestBody] NVARCHAR(6000),
-    [requestFrom] VARCHAR(40),
-    [requestTo] VARCHAR(40),
-    [referenceObjectId] VARCHAR(40),
-    [createdDatetime] TEXT,
-    [headers] TEXT
-);'''
+[requestBody] NVARCHAR(6000),
+[requestFrom] VARCHAR(40),
+[requestTo] VARCHAR(40),
+[referenceObjectId] VARCHAR(40),
+[createdDatetime] TEXT,
+[headers] TEXT,
+[Completed] INTEGER DEFAULT 0, 
+TriggerObject NVARCHAR(60));
+'''
 
 
 def store_in_database(requestUUID, requestToLog):

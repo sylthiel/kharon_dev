@@ -2,6 +2,10 @@ import configparser
 import requests
 from simple_salesforce import Salesforce, SalesforceResourceNotFound
 import json
+import datetime
+import io
+import zipfile
+import sqlite3
 
 
 class RequestHandlerBase:
@@ -143,6 +147,23 @@ class YoutrackRequestHandler(RequestHandlerBase):
             return json.dumps(yti_main)
 
     def mention_case_in_yti(self):
+        """Creates an automated comment in the YT Issue referenced in the JSON request provided and logs
+        it in yt_comments db
+        Request format:
+        {
+            'TriggerObject': 'SF Object ID',
+            'YTReadableId': 'SF-200',
+            'CaseInformation': {
+                'URL': 'http://case_url.com',
+                'CommentFromEngineer': 'Sample comment text',
+                'CustomerInformation':{
+                    'Annual$': 14069,
+                    'CompanyName': 'Some Company Name',
+                    'ContactEmail': 'khdev@khdev.msp360'
+                }
+            }
+        }
+        """
         issue_comments_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId'] + '/comments'
         case_information = self.request.get('CaseInformation')
         customer_information = case_information.get('CustomerInformation')
@@ -158,5 +179,29 @@ class YoutrackRequestHandler(RequestHandlerBase):
         comment_text['text'] += 'This comment was generated automatically by kh'
         json_comment = json.dumps(comment_text)
         post_comment_request = requests.post(issue_comments_api_location, data=json_comment, headers=self.headers)
+        # print(post_comment_request.text)
+        response = post_comment_request.json()
+        db_s = '''
+        CREATE TABLE yt_comments(
+            [trigger_object] NVARCHAR(40) NOT NULL,
+            [request_uuid] VARCHAR(40) NOT NULL,
+            [engineer_comment] NVARCHAR(6000) NOT NULL,
+            [created_datetime] TEXT,
+            [created_comment_id] VARCHAR(40),
+            [number] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            [created_comment_path] NVARCHAR(60) NOT NULL 
+        );
+        '''
+        comment_for_db = {
+            'trigger_object': self.request['TriggerObject'],
+            'request_uuid': self.requestId,
+            'engineer_comment': comment_text['text'],
+            'created_datetime': str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()),
+            'created_comment_id': response['id'],
+            'created_comment_path': f"{issue_comments_api_location}/response['id']",
+            'From': 'YoutrackRequestHandler',
+            'To': 'db',
+            'Function': 'log_yti_comment'
+        }
+        return json.dumps(comment_for_db)
 
-        return post_comment_request.status_code
