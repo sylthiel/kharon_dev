@@ -81,13 +81,16 @@ def process(kh_request):
         con.close()
         return True
     else:
-        columns = ', '.join(request_body.keys())
-        placeholders = ':' + ', :'.join(request_body.keys())
+        req_body = {x: request_body[x] for x in request_body if x not in {'From', 'To', 'Function'}}
+        columns = ', '.join(req_body.keys())
+        placeholders = ':' + ', :'.join(req_body.keys())
         query = 'INSERT INTO yt_comments (%s) VALUES (%s)' % (columns, placeholders)
-        cur.execute(query, request_body)
-        dbg(f'{request_uuid}|Youtrack comment {request_body["created_comment_id"]} logged to database')
+        dbg(f'{request_uuid}|Constructed query: {query}')
+        cur.execute(query, req_body)
+        dbg(f'{request_uuid}|Youtrack comment {req_body["created_comment_id"]} logged to database')
         con.commit()
         con.close()
+
 
 
 def processing_loop():
