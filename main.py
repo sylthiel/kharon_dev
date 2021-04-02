@@ -87,6 +87,8 @@ def process(kh_request):
         query = 'INSERT INTO yt_comments (%s) VALUES (%s)' % (columns, placeholders)
         dbg(f'{request_uuid}|Constructed query: {query}')
         cur.execute(query, req_body)
+        cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
+                    [request_uuid])
         dbg(f'{request_uuid}|Youtrack comment {req_body["created_comment_id"]} logged to database')
         con.commit()
         con.close()
