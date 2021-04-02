@@ -90,6 +90,7 @@ def process(kh_request):
         dbg(f'{request_uuid}|Youtrack comment {req_body["created_comment_id"]} logged to database')
         con.commit()
         con.close()
+        return True
 
 
 
