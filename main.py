@@ -60,40 +60,25 @@ def process(kh_request):
         con.close()
         return False
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
-    if request_body['To'] != 'db':
-        rqh = handler_association[request_body['To']](request_body, request_uuid)
-        dbg(f'{request_uuid}|INFO|Starting processing for request \n')
-        result = rqh.function_association[request_body['Function']]()
+    rqh = handler_association[request_body['To']](request_body, request_uuid)
+    dbg(f'{request_uuid}|INFO|Starting processing for request \n')
+    result = rqh.function_association[request_body['Function']]()
 
-        # This condition indicates a request that has more than one stage (needs to be processed further)
-        if validate_request(request_uuid, result):
-            return process([request_uuid, result, failed_to_execute])
+    # This condition indicates a request that has more than one stage (needs to be processed further)
+    if validate_request(request_uuid, result):
+        return process([request_uuid, result, failed_to_execute])
 
-        if result:
-            dbg(f'{request_uuid}|INFO|Successfully completed\n')
-            cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
-                        [request_uuid])
-        else:
-            dbg(f'{request_uuid}|ERROR|Failed to complete, currently at {failed_to_execute+1} retries')
-            cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUIDit = ?',
-                        (failed_to_execute+1, request_uuid))
-        con.commit()
-        con.close()
-        return True
-    else:
-        req_body = {x: request_body[x] for x in request_body if x not in {'From', 'To', 'Function'}}
-        columns = ', '.join(req_body.keys())
-        placeholders = ':' + ', :'.join(req_body.keys())
-        query = 'INSERT INTO yt_comments (%s) VALUES (%s)' % (columns, placeholders)
-        dbg(f'{request_uuid}|Constructed query: {query}')
-        cur.execute(query, req_body)
+    if result:
+        dbg(f'{request_uuid}|INFO|Successfully completed\n')
         cur.execute('UPDATE kharon_requests SET Completed = 1 WHERE requestUUID = ?',
                     [request_uuid])
-        dbg(f'{request_uuid}|Youtrack comment {req_body["created_comment_id"]} logged to database')
-        con.commit()
-        con.close()
-        return True
-
+    else:
+        dbg(f'{request_uuid}|ERROR|Failed to complete, currently at {failed_to_execute+1} retries')
+        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUIDit = ?',
+                    (failed_to_execute+1, request_uuid))
+    con.commit()
+    con.close()
+    return True
 
 
 def processing_loop():

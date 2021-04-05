@@ -7,6 +7,9 @@ import io
 import zipfile
 import sqlite3
 
+def dbg(debug_output):
+    with open('debug.txt', 'a+') as debug:
+        debug.write(debug_output)
 
 class RequestHandlerBase:
     def __init__(self, resource_name, request_body, request_uuid):
@@ -72,6 +75,57 @@ class SalesforceRequestHandler(RequestHandlerBase):
             return self.connection_object.YoutrackIssue__c.create(prepared_yti_details)
 
 
+class KharonDatabaseHandler:
+    def __init__(self):
+        self.cfg = KharonDatabaseHandler.load_config()
+
+    @staticmethod
+    def load_config():
+        config = configparser.ConfigParser()
+        config.read('kh.ini')
+        return {key: config['Database information'][key] for key in config['Database information']}
+
+    def log_yt_comment(self, request_uuid, request_body):
+        con = sqlite3.connect(self.db_cfg['database_path'])
+        cur = con.cursor()
+        req_body = {x: request_body[x] for x in request_body if x not in {'From', 'To', 'Function'}}
+        columns = ', '.join(req_body.keys())
+        placeholders = ':' + ', :'.join(req_body.keys())
+        query = 'INSERT INTO yt_comments (%s) VALUES (%s)' % (columns, placeholders)
+        # dbg(f'{request_uuid}|Constructed query: {query}')
+        cur.execute(query, req_body)
+        dbg(f'{request_uuid}|Youtrack comment {req_body["created_comment_id"]} logged to database')
+        con.commit()
+        con.close()
+
+    def mark_comment_as_deleted(self, comment_number):
+        con = sqlite3.connect(self.db_cfg['database_path'])
+        cur = con.cursor()
+        cur.execute(f'UPDATE yt_comments SET status = 2 WHERE number = ?', (comment_number,))
+        cur.commit()
+        con.close()
+
+    def find_latest_comment(self, trigger_object_id, trigger_yt_id):
+        db_s = '''
+                CREATE TABLE yt_comments(
+                    [trigger_object] NVARCHAR(40) NOT NULL,
+                    [request_uuid] VARCHAR(40) NOT NULL,
+                    [engineer_comment] NVARCHAR(6000) NOT NULL,
+                    [created_datetime] TEXT,
+                    [created_comment_id] VARCHAR(40),
+                    [number] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    [created_comment_path] NVARCHAR(60) NOT NULL 
+                );
+                '''
+        con = sqlite3.connect(self.db_cfg['database_path'])
+        cur = con.cursor()
+        cur.execute(f'SELECT created_comment_path, number FROM yt_comments WHERE trigger_object = ? AND status = 1'
+                    f'ORDER BY created_datetime DESC LIMIT 1', (trigger_object_id,))
+        located_comments = cur.fetchall()
+        con.close()
+        return located_comments
+
+
 class YoutrackRequestHandler(RequestHandlerBase):
     def __init__(self, request_body, request_uuid):
         super().__init__('YouTrack', request_body, request_uuid)
@@ -85,7 +139,8 @@ class YoutrackRequestHandler(RequestHandlerBase):
         self.api_endpoint = self.config['api endpoint']
         self.function_association = {
             'obtain_yti_details': self.obtain_yti_details,
-            'mention_case_in_yti': self.mention_case_in_yti
+            'mention_case_in_yti': self.mention_case_in_yti,
+            'delete_kh_yt_comment': self.delete_kh_yt_comment
         }
 
     def obtain_yti_details(self):
@@ -189,7 +244,9 @@ class YoutrackRequestHandler(RequestHandlerBase):
             [created_datetime] TEXT,
             [created_comment_id] VARCHAR(40),
             [number] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            [created_comment_path] NVARCHAR(60) NOT NULL 
+            [created_comment_path] NVARCHAR(60) NOT NULL,
+            [trigger_yt_id] NVARCHAR(50),
+            [status] INTEGER DEFAULT 0
         );
         '''
         comment_for_db = {
@@ -198,10 +255,44 @@ class YoutrackRequestHandler(RequestHandlerBase):
             'engineer_comment': comment_text['text'],
             'created_datetime': str(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()),
             'created_comment_id': response['id'],
-            'created_comment_path': f"{issue_comments_api_location}/response['id']",
+            'created_comment_path': f"{issue_comments_api_location}/{response['id']}",
+            'trigger_yt_id': self.request['YTReadableId'],
+            'status': 1,
             'From': 'YoutrackRequestHandler',
             'To': 'db',
             'Function': 'log_yti_comment'
         }
-        return json.dumps(comment_for_db)
+        kh_db = KharonDatabaseHandler()
+        kh_db.log_yt_comment(comment_for_db)
+        return True
 
+    def delete_kh_yt_comment(self):
+        """This function takes a TriggerObject Id and attempts to locate the most recent comment created by kh
+        for this TriggerObject
+        Request format:
+        {
+            'TriggerObject': 'Trigger Object ID',
+            'YTReadableId': 'SF-200',
+            'From': 'Salesforce',
+            'To': 'YouTrack',
+            'Function': delete_kh_yt_comment
+        }
+        """
+        # issue_comments_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId'] + '/comments'
+        kh_db = KharonDatabaseHandler()
+        relevant_comment = kh_db.find_latest_comment(self.request['TriggerObject'], self.request['YTReadableId'])
+
+        if relevant_comment:
+            delete_request = requests.post(
+                relevant_comment[0], data=json.dumps({'deleted': True}), headers=self.headers)
+            if delete_request.status_code != 200:
+                dbg(f"{self.requestId}|ERROR|Failed to delete comment {relevant_comment[1]} ({relevant_comment[0]})")
+                dbg(f"{self.requestId}|INFO|YT Response: {delete_request.text}")
+                return False
+            dbg(f"{self.requestId}|INFO|Successfully deleted comment {relevant_comment[1]}({relevant_comment[0]})")
+            kh_db.mark_comment_as_deleted(relevant_comment[1])
+            return True
+        else:
+            dbg(f"{self.requestId}|INFO|No comment found for trigger_object {self.request['TriggerObject']} "
+                f"and Youtrack Issue {self.request['YTReadableId']}")
+        return False
