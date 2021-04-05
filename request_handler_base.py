@@ -102,7 +102,7 @@ class KharonDatabaseHandler:
         con = sqlite3.connect(self.db_cfg['database_path'])
         cur = con.cursor()
         cur.execute(f'UPDATE yt_comments SET status = 2 WHERE number = ?', (comment_number,))
-        cur.commit()
+        con.commit()
         con.close()
 
     def find_latest_comment(self, trigger_object_id, trigger_yt_id):
@@ -288,14 +288,14 @@ class YoutrackRequestHandler(RequestHandlerBase):
                 relevant_comment[0][0], data=json.dumps({'deleted': True}), headers=self.headers)
             if delete_request.status_code != 200:
                 dbg(f"{self.requestId}|ERROR|Failed to delete comment {relevant_comment[0][1]}"
-                    f" ({relevant_comment[0][0]})")
-                dbg(f"{self.requestId}|INFO|YT Response: {delete_request.text}")
+                    f" ({relevant_comment[0][0]})\n")
+                dbg(f"{self.requestId}|INFO|YT Response: {delete_request.text}\n")
                 return False
             dbg(f"{self.requestId}|"
-                f"INFO|Successfully deleted comment {relevant_comment[0][1]}({relevant_comment[0][0]})")
+                f"INFO|Successfully deleted comment {relevant_comment[0][1]}({relevant_comment[0][0]})\n")
             kh_db.mark_comment_as_deleted(relevant_comment[0][1])
             return True
         else:
             dbg(f"{self.requestId}|INFO|No comment found for trigger_object {self.request['TriggerObject']} "
-                f"and Youtrack Issue {self.request['YTReadableId']}")
+                f"and Youtrack Issue {self.request['YTReadableId']}\n")
         return True
