@@ -283,13 +283,16 @@ class YoutrackRequestHandler(RequestHandlerBase):
         relevant_comment = kh_db.find_latest_comment(self.request['TriggerObject'], self.request['YTReadableId'])
 
         if relevant_comment:
+            print(relevant_comment)
             delete_request = requests.post(
-                relevant_comment[0], data=json.dumps({'deleted': True}), headers=self.headers)
+                relevant_comment[0][0], data=json.dumps({'deleted': True}), headers=self.headers)
             if delete_request.status_code != 200:
-                dbg(f"{self.requestId}|ERROR|Failed to delete comment {relevant_comment[1]} ({relevant_comment[0]})")
+                dbg(f"{self.requestId}|ERROR|Failed to delete comment {relevant_comment[0][1]}"
+                    f" ({relevant_comment[0][0]})")
                 dbg(f"{self.requestId}|INFO|YT Response: {delete_request.text}")
                 return False
-            dbg(f"{self.requestId}|INFO|Successfully deleted comment {relevant_comment[1]}({relevant_comment[0]})")
+            dbg(f"{self.requestId}|"
+                f"INFO|Successfully deleted comment {relevant_comment[0][1]}({relevant_comment[0][0]})")
             kh_db.mark_comment_as_deleted(relevant_comment[1])
             return True
         else:
