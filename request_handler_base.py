@@ -298,4 +298,4 @@ class YoutrackRequestHandler(RequestHandlerBase):
         else:
             dbg(f"{self.requestId}|INFO|No comment found for trigger_object {self.request['TriggerObject']} "
                 f"and Youtrack Issue {self.request['YTReadableId']}")
-        return False
+        return True
