@@ -293,7 +293,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
                 return False
             dbg(f"{self.requestId}|"
                 f"INFO|Successfully deleted comment {relevant_comment[0][1]}({relevant_comment[0][0]})")
-            kh_db.mark_comment_as_deleted(relevant_comment[1])
+            kh_db.mark_comment_as_deleted(relevant_comment[0][1])
             return True
         else:
             dbg(f"{self.requestId}|INFO|No comment found for trigger_object {self.request['TriggerObject']} "
