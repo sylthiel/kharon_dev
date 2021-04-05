@@ -119,7 +119,7 @@ class KharonDatabaseHandler:
                 '''
         con = sqlite3.connect(self.db_cfg['database_path'])
         cur = con.cursor()
-        cur.execute(f'SELECT created_comment_path, number FROM yt_comments WHERE trigger_object = ? AND status = 1'
+        cur.execute(f'SELECT created_comment_path, number FROM yt_comments WHERE trigger_object = ? AND status = 1 '
                     f'ORDER BY created_datetime DESC LIMIT 1', (trigger_object_id,))
         located_comments = cur.fetchall()
         con.close()
