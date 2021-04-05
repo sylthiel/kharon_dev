@@ -263,7 +263,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
             'Function': 'log_yti_comment'
         }
         kh_db = KharonDatabaseHandler()
-        kh_db.log_yt_comment(comment_for_db)
+        kh_db.log_yt_comment(self.requestId, comment_for_db)
         return True
 
     def delete_kh_yt_comment(self):
