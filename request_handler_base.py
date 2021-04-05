@@ -77,7 +77,7 @@ class SalesforceRequestHandler(RequestHandlerBase):
 
 class KharonDatabaseHandler:
     def __init__(self):
-        self.cfg = KharonDatabaseHandler.load_config()
+        self.db_cfg = KharonDatabaseHandler.load_config()
 
     @staticmethod
     def load_config():
