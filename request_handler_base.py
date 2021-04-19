@@ -225,8 +225,9 @@ class YoutrackRequestHandler(RequestHandlerBase):
         comment_text = {"text": f'This issue has been referenced in [Salesforce]({case_information.get("URL")})\n'}
         if case_information.get('Reporter'):
             comment_text['text'] += f' by {case_information.get("Reporter")}\n'
-        comment_text['text'] += f'Affected customer: {customer_information.get("CompanyName")}\n' \
-                                f'({customer_information.get("ContactEmail")})\n '
+        comment_text['text'] += f'Affected customer: {customer_information.get("CompanyName")}\n'
+        if customer_information.get("ContactEmail"):
+            comment_text['text'] += f'({customer_information.get("ContactEmail")})\n '
         if customer_information.get('TotalLicenses'):
             comment_text['text'] += f"Total Licenses on account: {customer_information.get('TotalLicenses')}"
         if customer_information.get("Annual$") != '':
