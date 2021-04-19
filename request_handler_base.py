@@ -222,9 +222,13 @@ class YoutrackRequestHandler(RequestHandlerBase):
         issue_comments_api_location = self.api_endpoint + '/issues/' + self.request['YTReadableId'] + '/comments'
         case_information = self.request.get('CaseInformation')
         customer_information = case_information.get('CustomerInformation')
-        comment_text = {"text" : f'This issue has been referenced in [Salesforce]({case_information.get("URL")})\n'
-                                 f'Affected customer: {customer_information.get("CompanyName")}\n'
-                                 f'({customer_information.get("ContactEmail")})\n'}
+        comment_text = {"text": f'This issue has been referenced in [Salesforce]({case_information.get("URL")})\n'}
+        if case_information.get('Reporter'):
+            comment_text['text'] += f' by {case_information.get("Reporter")}\n'
+        comment_text['text'] += f'Affected customer: {customer_information.get("CompanyName")}\n' \
+                                f'({customer_information.get("ContactEmail")})\n '
+        if customer_information.get('TotalLicenses'):
+            comment_text['text'] += f"Total Licenses on account: {customer_information.get('TotalLicenses')}"
         if customer_information.get("Annual$") != '':
             comment_text['text'] += f'Annual: ${customer_information.get("Annual$")}\n'
         if case_information.get("CommentFromEngineer") is not None:
