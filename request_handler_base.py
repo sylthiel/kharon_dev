@@ -229,7 +229,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
         if customer_information.get("ContactEmail"):
             comment_text['text'] += f'({customer_information.get("ContactEmail")})\n '
         if customer_information.get('TotalLicenses'):
-            comment_text['text'] += f"Total Licenses on account: {customer_information.get('TotalLicenses')}"
+            comment_text['text'] += f"Total Licenses on account: {customer_information.get('TotalLicenses')}\n"
         if customer_information.get("Annual$") != '':
             comment_text['text'] += f'Annual: ${customer_information.get("Annual$")}\n'
         if case_information.get("CommentFromEngineer") is not None:
