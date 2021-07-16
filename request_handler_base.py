@@ -6,10 +6,13 @@ import datetime
 import io
 import zipfile
 import sqlite3
+from slack_sdk import WebClient
+
 
 def dbg(debug_output):
     with open('debug.txt', 'a+') as debug:
         debug.write(debug_output)
+
 
 class RequestHandlerBase:
     def __init__(self, resource_name, request_body, request_uuid):
@@ -33,6 +36,49 @@ class RequestHandlerBase:
             debug.write(f'{request_uuid}|'
                         f'SUCCESS: loaded request handler configuration for {resource_name}')
 
+
+class SlackRequestHandler(RequestHandlerBase):
+
+    def __init__(self, request, request_uuid):
+        super().__init__('Slack', request, request_uuid)
+        self.function_association = {'send_slack_notification': self.send_slack_notification}
+        self.connect()
+        self.user_list = self.obtain_slack_user_list()
+
+    def connect(self):
+        if self.config != {}:
+            self.connection_object = WebClient(self.config['token'])
+
+    def obtain_slack_user_list(self):
+        slack_user_list = self.connection_object.users_list()
+        user_to_id = {}
+        for user in slack_user_list['members']:
+            user_to_id.put(user['name'], user['id'])
+        return user_to_id
+
+    def send_slack_notification(self):
+        """
+        Request example:
+        {
+        "From": "Salesforce",
+        "To": "Slack",
+        "Function": "send_slack_notification"
+        "notification_destination_type": "channel",
+        "notification_destination": "missed-call-notifications",
+        "notification_text": "A missed call case has been created: [Link](https://google.com)"
+        "TriggerObject": "5003n00002TRjNMAA1"
+        }
+        :return:
+        """
+        if self.request['notification_destination_type'] == 'user':
+            if self.request['notification_destination'] in self.user_list:
+                self.connection_object.chat_postMessage(
+                    channel = self.user_list[self.request['notification_destination']],
+                    text = self.request['notification_text'])
+        elif self.request['notification_destination_type'] == 'channel':
+            self.connection_object.chat_postMessage(
+                channel=self.request['notification_destination'],
+                text=self.request['notification_text'])
 
 class SalesforceRequestHandler(RequestHandlerBase):
 
