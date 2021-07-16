@@ -78,7 +78,7 @@ def process(kh_request):
                     [request_uuid])
     else:
         dbg(f'{request_uuid}|ERROR|Failed to complete, currently at {failed_to_execute+1} retries')
-        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUIDit = ?',
+        cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUID = ?',
                     (failed_to_execute+1, request_uuid))
     con.commit()
     con.close()

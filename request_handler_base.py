@@ -79,6 +79,7 @@ class SlackRequestHandler(RequestHandlerBase):
             self.connection_object.chat_postMessage(
                 channel=self.request['notification_destination'],
                 text=self.request['notification_text'])
+        return True
 
 class SalesforceRequestHandler(RequestHandlerBase):
 
