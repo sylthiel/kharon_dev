@@ -53,7 +53,7 @@ class SlackRequestHandler(RequestHandlerBase):
         slack_user_list = self.connection_object.users_list()
         user_to_id = {}
         for user in slack_user_list['members']:
-            user_to_id.put(user['name'], user['id'])
+            user_to_id[user['name']] = user['id']
         return user_to_id
 
     def send_slack_notification(self):
@@ -62,10 +62,10 @@ class SlackRequestHandler(RequestHandlerBase):
         {
         "From": "Salesforce",
         "To": "Slack",
-        "Function": "send_slack_notification"
+        "Function": "send_slack_notification",
         "notification_destination_type": "channel",
         "notification_destination": "missed-call-notifications",
-        "notification_text": "A missed call case has been created: [Link](https://google.com)"
+        "notification_text": "A missed call case has been created: [Link](https://google.com)",
         "TriggerObject": "5003n00002TRjNMAA1"
         }
         :return:
