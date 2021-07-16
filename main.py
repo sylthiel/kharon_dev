@@ -1,11 +1,15 @@
 import sqlite3
 import configparser
-from request_handler_base import SalesforceRequestHandler, YoutrackRequestHandler
+from request_handler_base import SalesforceRequestHandler, YoutrackRequestHandler, SlackRequestHandler
 import datetime
 import json
 import time
 
-handler_association = {'Salesforce': SalesforceRequestHandler, 'YouTrack': YoutrackRequestHandler}
+handler_association = {
+    'Salesforce': SalesforceRequestHandler,
+    'YouTrack': YoutrackRequestHandler,
+    'Slack': SlackRequestHandler
+}
 db_cfg = {}
 
 
