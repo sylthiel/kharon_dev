@@ -68,16 +68,16 @@ def process(kh_request):
         con.close()
         return False
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
-    global_request_handlers[request_body['To']] = handler_association[request_body['To']](request_body, request_uuid)
+    if request_body['To'] not in global_request_handlers:
+        global_request_handlers[request_body['To']] = \
+            handler_association[request_body['To']](request_body, request_uuid)
+    else:
+        global_request_handlers[request_body['To']].update_request(request_body, request_uuid)
     dbg(f'{request_uuid}|INFO|Starting processing for request \n')
     result = global_request_handlers[request_body['To']].function_association[request_body['Function']]()
 
     # This condition indicates a request that has more than one stage (needs to be processed further)
     if validate_request(request_uuid, result):
-        if result['To'] not in global_request_handlers:
-            global_request_handlers[result['To']] = handler_association[result['To']](result, request_uuid)
-        else:
-            global_request_handlers[result['To']].update_request(result, request_uuid)
         return process([request_uuid, result, failed_to_execute])
 
     if result:
@@ -110,11 +110,11 @@ def processing_loop():
 
                 for it_request in current_requests:
                     request_uuid, request_body = it_request[0], json.loads(it_request[1])
-                    if request_body['To'] not in global_request_handlers:
-                        global_request_handlers[request_body['To']] = handler_association[request_body['To']](
-                            request_body, request_uuid)
-                    else:
-                        global_request_handlers[request_body['To']].update_request(request_body, request_uuid)
+                    # if request_body['To'] not in global_request_handlers:
+                    #     global_request_handlers[request_body['To']] = handler_association[request_body['To']](
+                    #         request_body, request_uuid)
+                    # else:
+                    #     global_request_handlers[request_body['To']].update_request(request_body, request_uuid)
                     try:
                         process(it_request)
                     except Exception as e:
