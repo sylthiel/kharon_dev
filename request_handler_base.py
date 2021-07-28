@@ -36,6 +36,9 @@ class RequestHandlerBase:
             debug.write(f'{request_uuid}|'
                         f'SUCCESS: loaded request handler configuration for {resource_name}')
 
+    def update_request(self, request_body, request_uuid):
+        self.request = request_body
+        self.requestId = request_uuid
 
 class SlackRequestHandler(RequestHandlerBase):
 

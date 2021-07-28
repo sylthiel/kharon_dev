@@ -10,6 +10,9 @@ handler_association = {
     'YouTrack': YoutrackRequestHandler,
     'Slack': SlackRequestHandler
 }
+global_request_handlers = {
+
+}
 db_cfg = {}
 
 
@@ -30,8 +33,8 @@ CREATE TABLE IF NOT EXISTS "kharon_requests"
 '''
 
 
-def dbg(debug_output):
-    with open('debug.txt', 'a+') as debug:
+def dbg(debug_output, log_type='debug'):
+    with open(log_type+'.txt', 'a+') as debug:
         debug.write(debug_output)
 
 
@@ -40,7 +43,7 @@ def validate_request(request_uuid, request_body):
         json_req = json.loads(request_body)
     except Exception as e:
         dbg(f'{request_uuid}|INFO|Error when parsing request JSON\n{str(e)}\nRequest body:\n'
-            f'{request_body}\n')
+            f'{request_body}\n', 'request_validation')
         return False
     sender, rcpt, fn = json_req.get('From'), json_req.get('To'), json_req.get('Function')
     return sender and rcpt and fn
@@ -54,6 +57,7 @@ def load_config():
 
 
 def process(kh_request):
+    global global_request_handlers
     con = sqlite3.connect(db_cfg['database_path'])
     cur = con.cursor()
     if not validate_request(kh_request[0], kh_request[1]):
@@ -64,12 +68,16 @@ def process(kh_request):
         con.close()
         return False
     request_uuid, request_body, failed_to_execute = kh_request[0], json.loads(kh_request[1]), kh_request[2]
-    rqh = handler_association[request_body['To']](request_body, request_uuid)
+    global_request_handlers[request_body['To']] = handler_association[request_body['To']](request_body, request_uuid)
     dbg(f'{request_uuid}|INFO|Starting processing for request \n')
-    result = rqh.function_association[request_body['Function']]()
+    result = global_request_handlers[request_body['To']].function_association[request_body['Function']]()
 
     # This condition indicates a request that has more than one stage (needs to be processed further)
     if validate_request(request_uuid, result):
+        if result['To'] not in global_request_handlers:
+            global_request_handlers[result['To']] = handler_association[result['To']](result, request_uuid)
+        else:
+            global_request_handlers[result['To']].update_request(result, request_uuid)
         return process([request_uuid, result, failed_to_execute])
 
     if result:
@@ -87,17 +95,26 @@ def process(kh_request):
 
 def processing_loop():
     load_config()
+    global global_request_handlers
     while True:
         con = sqlite3.connect(db_cfg['database_path'])
         if con:
             cur = con.cursor()
             query = 'SELECT requestUUID, requestBody, failedToExecute FROM kharon_requests ' \
-                    'WHERE Completed = 0 AND failedToExecute < 3 ORDER BY createdDatetime LIMIT 10'
+                    'WHERE Completed = 0 AND failedToExecute < 3 ORDER BY createdDatetime LIMIT 100'
             cur.execute(query)
             current_requests = cur.fetchall()
 
             if len(current_requests):
+                # rqh = handler_association[request_body['To']](request_body, request_uuid)
+
                 for it_request in current_requests:
+                    request_uuid, request_body = it_request[0], json.loads(it_request[1])
+                    if request_body['To'] not in global_request_handlers:
+                        global_request_handlers[request_body['To']] = handler_association[request_body['To']](
+                            request_body, request_uuid)
+                    else:
+                        global_request_handlers[request_body['To']].update_request(request_body, request_uuid)
                     try:
                         process(it_request)
                     except Exception as e:
@@ -106,6 +123,7 @@ def processing_loop():
                         cur.execute('UPDATE kharon_requests SET failedToExecute = ? WHERE requestUUID = ?',
                                     (int(it_request[2]) + 1, it_request[0]))
                         con.commit()
+                global_request_handlers = {}
             else:
                 time.sleep(1)
         else:
