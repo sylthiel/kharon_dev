@@ -40,6 +40,23 @@ class RequestHandlerBase:
         self.request = request_body
         self.requestId = request_uuid
 
+
+class ProductBoardRequestHandler(RequestHandlerBase):
+    def __init__(self, request, request_uuid):
+        super().__init__('ProductBoard', request, request_uuid)
+        self.function_association = {'create_pb_item': self.create_pb_item}
+        self.headers = {'Authorization': f"Bearer {self.config['JWT']}", "Content-Type": "application/json"}
+        self.api_endpoint = self.config['api_endpoint']
+
+    def create_pb_item(self):
+        note_data = {}
+        for it in self.request.pbnote_data:
+            note_data[it] = self.request.pbnote_data[it]
+        post_pb_item = requests.post(url=self.api_endpoint,
+                                     data=json.dumps(note_data),
+                                     headers=self.headers)
+        return post_pb_item.status_code == 201
+
 class SlackRequestHandler(RequestHandlerBase):
 
     def __init__(self, request, request_uuid):
@@ -76,13 +93,14 @@ class SlackRequestHandler(RequestHandlerBase):
         if self.request['notification_destination_type'] == 'user':
             if self.request['notification_destination'] in self.user_list:
                 self.connection_object.chat_postMessage(
-                    channel = self.user_list[self.request['notification_destination']],
-                    text = self.request['notification_text'])
+                    channel=self.user_list[self.request['notification_destination']],
+                    text=self.request['notification_text'])
         elif self.request['notification_destination_type'] == 'channel':
             self.connection_object.chat_postMessage(
                 channel=self.request['notification_destination'],
                 text=self.request['notification_text'])
         return True
+
 
 class SalesforceRequestHandler(RequestHandlerBase):
 
@@ -99,9 +117,9 @@ class SalesforceRequestHandler(RequestHandlerBase):
                                                     security_token=self.config['security_token'],
                                                     domain='test')
             else:
-                self.connection_object = Salesforce(username=self.config['username'],
-                                                    password=self.config['password'],
-                                                    security_token=self.config['security_token'])
+                self.connection_.object = Salesforce(username=self.config['username'],
+                                                     password=self.config['password'],
+                                                     security_token=self.config['security_token'])
 
     def populate_yti_details(self):
         """This method takes a property map like and updates the associated YoutrackIssue__c object accordingly
@@ -199,7 +217,7 @@ class YoutrackRequestHandler(RequestHandlerBase):
                                                  'customFields(id,' \
                                                  'projectCustomField(id,field(id,name)),value(name)),tags(id,name)'
         request_yti_details = requests.get(issue_with_fields, headers=self.headers)
-        print(request_yti_details.json())
+        # print(request_yti_details.json())
         if request_yti_details.status_code != 200:
             if request_yti_details.status_code == 404:
                 yti_details = {

@@ -1,6 +1,6 @@
 import sqlite3
 import configparser
-from request_handler_base import SalesforceRequestHandler, YoutrackRequestHandler, SlackRequestHandler
+from request_handler_base import SalesforceRequestHandler, YoutrackRequestHandler, SlackRequestHandler, ProductBoardRequestHandler
 import datetime
 import json
 import time
@@ -8,7 +8,8 @@ import time
 handler_association = {
     'Salesforce': SalesforceRequestHandler,
     'YouTrack': YoutrackRequestHandler,
-    'Slack': SlackRequestHandler
+    'Slack': SlackRequestHandler,
+    'ProductBoard': ProductBoardRequestHandler
 }
 global_request_handlers = {
 
