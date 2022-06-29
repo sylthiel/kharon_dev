@@ -58,6 +58,9 @@ class ProductBoardRequestHandler(RequestHandlerBase):
         post_pb_item = requests.post(url=self.api_endpoint,
                                      data=json.dumps(note_data),
                                      headers=self.headers)
+        with open('pb_debug_request.txt', 'w+') as pbdebug:
+            pbdebug.write(str(post_pb_item.status_code))
+            pbdebug.write(post_pb_item.response.text)
         return post_pb_item.status_code == 201
 
 class SlackRequestHandler(RequestHandlerBase):
