@@ -49,7 +49,7 @@ class ProductBoardRequestHandler(RequestHandlerBase):
         self.api_endpoint = self.config['api_endpoint']
 
     def create_pb_item(self):
-        note_data = {}
+        note_data = {}gi
         for it in self.request.pbnote_data:
             note_data[it] = self.request.pbnote_data[it]
         post_pb_item = requests.post(url=self.api_endpoint,
@@ -117,7 +117,7 @@ class SalesforceRequestHandler(RequestHandlerBase):
                                                     security_token=self.config['security_token'],
                                                     domain='test')
             else:
-                self.connection_.object = Salesforce(username=self.config['username'],
+                self.connection_object = Salesforce(username=self.config['username'],
                                                      password=self.config['password'],
                                                      security_token=self.config['security_token'])
 
