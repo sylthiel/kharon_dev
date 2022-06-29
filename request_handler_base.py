@@ -53,7 +53,7 @@ class ProductBoardRequestHandler(RequestHandlerBase):
         with open('pb_debug.txt', 'w+') as pbdebug:
             for it in self.request:
                 pbdebug.write(f"{it}:{self.request[it]}")
-        for it in self.request.pbnote_data:
+        for it in self.request['pbnote_data']:
             note_data[it] = self.request['pbnote_data'][it]
         post_pb_item = requests.post(url=self.api_endpoint,
                                      data=json.dumps(note_data),
