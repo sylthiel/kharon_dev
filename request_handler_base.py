@@ -45,11 +45,11 @@ class ProductBoardRequestHandler(RequestHandlerBase):
     def __init__(self, request, request_uuid):
         super().__init__('ProductBoard', request, request_uuid)
         self.function_association = {'create_pb_item': self.create_pb_item}
-        self.headers = {'Authorization': f"Bearer {self.config['JWT']}", "Content-Type": "application/json"}
+        self.headers = {'Authorization': f"Bearer {self.config['jwt']}", "Content-Type": "application/json"}
         self.api_endpoint = self.config['api_endpoint']
 
     def create_pb_item(self):
-        note_data = {}gi
+        note_data = {}
         for it in self.request.pbnote_data:
             note_data[it] = self.request.pbnote_data[it]
         post_pb_item = requests.post(url=self.api_endpoint,
