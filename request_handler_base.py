@@ -7,6 +7,7 @@ import io
 import zipfile
 import sqlite3
 from slack_sdk import WebClient
+import time
 
 
 def dbg(debug_output):
@@ -96,6 +97,7 @@ class SlackRequestHandler(RequestHandlerBase):
         }
         :return:
         """
+        time.sleep(1)
         if self.request['notification_destination_type'] == 'user':
             if self.request['notification_destination'] in self.user_list:
                 self.connection_object.chat_postMessage(
